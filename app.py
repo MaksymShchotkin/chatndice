@@ -5,11 +5,10 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, join_room, leave_room, emit
 from collections import defaultdict
 import os
-import json
 import uuid
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['SECRET_KEY'] = 'your_secret_key' # TODO: HIDE THIS BEFORE DEPLOYING
 
 socketio = SocketIO(app)
 rooms = defaultdict(lambda: {"users": [], "host": None})

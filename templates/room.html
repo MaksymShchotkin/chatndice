@@ -46,7 +46,6 @@
                 </ul>
             </div>
 
-            <!-- Leave Room Button -->
             <button id="leaveRoom">Leave Room</button>
         </div>
 
@@ -60,10 +59,8 @@
         </div>
     </div>
 
-    <!-- Link to external JavaScript file -->
     <script>
-        // scripts.js
-        const socket = io(); // 👈 Move this outside so it's accessible globally
+        const socket = io();
 
         document.addEventListener('DOMContentLoaded', () => {
             const username = "{{ username }}";
@@ -108,30 +105,25 @@
                 socket.emit('disconnect_user', { username: "{{ username }}", room: "{{ room_id }}" });
                 socket.disconnect();
 
-                // Optional: redirect back to homepage
                 window.location.href = "/";
             });
         });
 
-        // Handle before unload to disconnect user
         window.addEventListener('beforeunload', () => {
             socket.emit('disconnect_user', { username, room });
         });
 
-        // Listen for the update_users event to update the user list in the room
         socket.on('update_users', (data) => {
             const userList = document.getElementById('users');
-            userList.innerHTML = '';  // Clear the current list
+            userList.innerHTML = ''; 
 
-            // Loop through users and add them to the list
             data.users.forEach(user => {
                 const li = document.createElement('li');
-                const isHost = user === data.host;  // Check if the user is the host
-                li.innerHTML = isHost ? `<strong>Host: ${user}</strong>` : user;  // Highlight host
+                const isHost = user === data.host;
+                li.innerHTML = isHost ? `<strong>Host: ${user}</strong>` : user;
                 userList.appendChild(li);
             });
         });
-
     </script>
 </body>
 </html>
