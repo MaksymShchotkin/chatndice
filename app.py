@@ -30,8 +30,11 @@ def index():
 
 @app.route('/room/<room_id>')
 def room(room_id):
-    username = request.args.get('username', 'Guest')
-    return render_template('room.html', room_id=room_id, username=username)
+    username = request.args.get('username')
+    if not username:
+        return "Error: username is missing!"
+    return render_template('room.html', username=username, room_id=room_id)
+
 
 
 @socketio.on('join')

@@ -1,0 +1,92 @@
+/* General Body Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #e0f7fa; /* Light blue background */
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-container {
+    display: flex;
+    width: 80%; /* Main container takes 80% of the screen */
+    height: 80%; /* Height of the container */
+}
+
+.left-panel {
+    width: 60%; /* 60% of the width for the left section */
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.chat-box {
+    width: 40%; /* 40% of the width for the right section */
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: #ffffff; /* White background */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); /* Shadow */
+    margin-left: 20px; /* Space between chat and left panel */
+}
+
+h2, h3 {
+    color: #00796b; /* Dark teal color */
+}
+
+.dice-roll, .user-list {
+    margin-bottom: 20px;
+}
+
+input[type="number"], select, input[type="text"], button {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 5px;
+    border: 2px solid #00796b;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+button {
+    background-color: #00796b;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #004d40; /* Darker teal */
+}
+
+#chat {
+    height: 300px;
+    overflow-y: scroll;
+    border: 1px solid #ccc;
+    padding: 10px;
+    background-color: #fafafa;
+}
+
+#chat p {
+    margin: 0;
+}
+
+#users {
+    list-style: none;
+    padding: 0;
+}
+
+#leaveRoom {
+    background-color: red;
+    color: white;
+    padding: 8px 12px;
+    margin-top: 20px;
+    border: none;
+    cursor: pointer;
+}
+
+#leaveRoom:hover {
+    background-color: darkred;
+}
