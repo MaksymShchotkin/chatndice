@@ -4,59 +4,134 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Room: {{ room_id }}</title>
-
-    <!-- Link to the external CSS file -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/room_styles.css') }}">
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <!-- Link to external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/room_styles.css') }}">
 </head>
 <body>
-
-    <div class="main-container">
-        <!-- Left Side: Dice Roll and Users List -->
+    <div class="container">
+        <!-- Left panel with dice roll and users -->
         <div class="left-panel">
-            <div class="dice-roll">
-                <h4>Roll Dice</h4>
-                <label for="diceType">Dice:</label>
-                <select id="diceType">
-                    <option value="4">d4</option>
-                    <option value="6">d6</option>
-                    <option value="8">d8</option>
-                    <option value="10">d10</option>
-                    <option value="12">d12</option>
-                    <option value="20">d20</option>
-                </select>
+            <h3>Room ID: {{ room_id }}</h2>
+            <h3>Player: {{ username }}!</h3>
 
-                <label for="diceCount">Count:</label>
-                <input type="number" id="diceCount" value="1" min="1" max="20">
-                
-                <button id="rollDice">Roll</button>
+            <!-- Dice Roll Section -->
+            <div class="dice-form">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: flex-end;">
+                    <div>
+                        <label for="diceType" style="font-size: 14px;">Dice:</label><br>
+                        <select id="diceType" style="width: 60px; padding: 4px; font-size: 14px;">
+                            <option value="4">d4</option>
+                            <option value="6">d6</option>
+                            <option value="8">d8</option>
+                            <option value="10">d10</option>
+                            <option value="12">d12</option>
+                            <option value="20">d20</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="diceCount" style="font-size: 14px;">Count:</label><br>
+                        <input type="number" id="diceCount" value="1" min="1" max="20" style="width: 60px; padding: 4px; font-size: 14px;">
+                    </div>
+                </div>
+                <button id="rollDice" style="width: 22%; padding: 8px; font-size: 14px;">Roll</button>
             </div>
+            
 
-            <div class="user-list">
+            <!-- User List Section -->
+            <div id="user-list">
                 <h3>Users in Room</h3>
                 <ul id="users">
                     <!-- User list will be populated here -->
                 </ul>
-                <button id="leaveRoom">Leave Room</button>
             </div>
+
+            <!-- Leave Room Button -->
+            <button id="leaveRoom">Leave Room</button>
         </div>
 
-        <!-- Right Side: Chat Box -->
-        <div class="chat-box">
-            <h2>Room ID: {{ room_id }}</h2>
-            <h3>Welcome, {{ username }}!</h3>
-
+        <!-- Right panel with chat -->
+        <div class="right-panel">
             <div id="chat"></div>
 
-            <form id="chatForm" onsubmit="return false;">
-                <input type="text" id="msgInput" autocomplete="off" placeholder="Type a message..." required>
-                <button type="submit">Send</button>
-            </form>
+            <!-- Chat Input -->
+            <input type="text" id="msgInput" autocomplete="off" placeholder="Type a message..." required>
+
         </div>
     </div>
 
-    <!-- Link to the external JS file -->
-    <script src="{{ url_for('static', filename='js/room_script.js') }}"></script>
+    <!-- Link to external JavaScript file -->
+    <script>
+        // scripts.js
+        const socket = io(); // 👈 Move this outside so it's accessible globally
 
+        document.addEventListener('DOMContentLoaded', () => {
+            const username = "{{ username }}";
+            const room = "{{ room_id }}";
+
+            socket.emit('join', { username, room });
+
+            const chatBox = document.getElementById('chat');
+            const msgInput = document.getElementById('msgInput');
+            const rollButton = document.getElementById('rollDice');
+
+            // Listen for chat messages
+            socket.on('chat', (data) => {
+                const msg = document.createElement('p');
+                msg.innerHTML = `<strong>${data.username || 'System'}:</strong> ${data.msg}`;
+                chatBox.appendChild(msg);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+
+            // Handle sending messages (Enter key for sending)
+            msgInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') {
+                    const message = msgInput.value.trim();
+                    if (message) {
+                        socket.emit('chat', { username, msg: message, room });
+                        msgInput.value = ''; // Clear the input after sending
+                    }
+                }
+            });
+
+            // Handle rolling dice
+            rollButton.addEventListener('click', () => {
+                const sides = parseInt(document.getElementById('diceType').value);
+                const count = parseInt(document.getElementById('diceCount').value);
+
+                if (count > 0 && sides > 0) {
+                    socket.emit('roll_dice', { username, room, sides, count });
+                }
+            });
+
+            document.getElementById('leaveRoom').addEventListener('click', () => {
+                socket.emit('disconnect_user', { username: "{{ username }}", room: "{{ room_id }}" });
+                socket.disconnect();
+
+                // Optional: redirect back to homepage
+                window.location.href = "/";
+            });
+        });
+
+        // Handle before unload to disconnect user
+        window.addEventListener('beforeunload', () => {
+            socket.emit('disconnect_user', { username, room });
+        });
+
+        // Listen for the update_users event to update the user list in the room
+        socket.on('update_users', (data) => {
+            const userList = document.getElementById('users');
+            userList.innerHTML = '';  // Clear the current list
+
+            // Loop through users and add them to the list
+            data.users.forEach(user => {
+                const li = document.createElement('li');
+                const isHost = user === data.host;  // Check if the user is the host
+                li.innerHTML = isHost ? `<strong>Host: ${user}</strong>` : user;  // Highlight host
+                userList.appendChild(li);
+            });
+        });
+
+    </script>
 </body>
 </html>
