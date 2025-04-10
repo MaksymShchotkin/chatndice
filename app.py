@@ -8,7 +8,7 @@ import os
 import uuid
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'your_secret_key' # TODO: HIDE THIS BEFORE DEPLOYING
+app.config['SECRET_KEY'] = 'very_secret_key' # TODO: HIDE THIS BEFORE DEPLOYING
 
 socketio = SocketIO(app)
 rooms = defaultdict(lambda: {"users": [], "host": None})
