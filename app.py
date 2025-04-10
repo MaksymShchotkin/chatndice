@@ -40,44 +40,37 @@ def handle_join(data):
     room = data['room']
 
     if room not in rooms:
-        # create the room if it doesn't exist
-        rooms[room] = {'members': set(), 'messages': []}
+        rooms[room] = {'members': set(), 'messages': [], 'host': username}
 
-    rooms[room]['members'].add(username)  # add user to room
+    rooms[room]['members'].add(username)
     join_room(room)
 
-    # Emit the list of current users to everyone in the room
-    emit('update_users', {'users': list(rooms[room]['members'])}, room=room)
-
-    # Notify others in the room
-    emit('user_joined', {'username': username}, to=room)
-
+    emit('update_users', {'users': list(rooms[room]['members']), 'host': rooms[room]['host']}, room=room)
+    emit('chat', {'username': 'System', 'msg': f'{username} has joined the room.'}, room=room)
 
 
 @socketio.on('disconnect_user')
 def handle_disconnect(data):
     username = data['username']
     room = data['room']
-
     leave_room(room)
 
     if room not in rooms:
         return
 
     room_data = rooms[room]
-    if username in room_data['users']:
-        room_data['users'].remove(username)
+    if username in room_data['members']:
+        room_data['members'].remove(username)
 
-    if not room_data['users']:
+    if not room_data['members']:
         del rooms[room]
         return
 
     if username == room_data['host']:
-        room_data['host'] = room_data['users'][0]  # Next user becomes host
+        room_data['host'] = next(iter(room_data['members']), None)
 
-    emit('chat', {'username': 'System',
-         'msg': f"{username} has left the room."}, room=room)
-    emit('update_users', room_data, room=room)
+    emit('chat', {'username': 'System', 'msg': f"{username} has left the room."}, room=room)
+    emit('update_users', {'users': list(room_data['members']), 'host': room_data['host']}, room=room)
 
 
 @socketio.on('chat')
@@ -99,7 +92,6 @@ def handle_dice_roll(data):
     emit('chat', {'username': 'DiceBot', 'msg': result_msg}, room=room)
 
 
-# ✅ Only run once
 if __name__ == '__main__':
     if not os.path.exists('logs'):
         os.makedirs('logs')

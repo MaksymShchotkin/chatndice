@@ -43,32 +43,42 @@
         <ul id="users">
             <!-- User list will be populated here -->
         </ul>
+        <button id="leaveRoom" style="margin-top: 20px; background-color: red; color: white; padding: 8px 12px;">
+            Leave Room
+        </button>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const socket = io();
+        const socket = io();
+        const username = "{{ username }}";
+        const room = "{{ room_id }}";
 
-            const username = "{{ username }}";
-            const room = "{{ room_id }}";
-        
-            // Emit join event with the username and room ID
+        let hasLeft = false;
+        function leaveRoom() {
+            if (hasLeft) return;
+            hasLeft = true;
+            socket.emit('disconnect_user', { username, room });
+            socket.disconnect();
+            window.location.href = "/";
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
             socket.emit('join', { username, room });
-        
+
             const chatBox = document.getElementById('chat');
             const chatForm = document.getElementById('chatForm');
             const msgInput = document.getElementById('msgInput');
             const rollButton = document.getElementById('rollDice');
-        
-            // Listen for chat messages
+
             socket.on('chat', (data) => {
                 const msg = document.createElement('p');
                 msg.innerHTML = `<strong>${data.username || 'System'}:</strong> ${data.msg}`;
                 chatBox.appendChild(msg);
                 chatBox.scrollTop = chatBox.scrollHeight;
             });
-        
-            // Handle sending messages
+
+            document.getElementById('leaveRoom').addEventListener('click', leaveRoom);
+
             chatForm.addEventListener('submit', () => {
                 const message = msgInput.value.trim();
                 if (message) {
@@ -76,33 +86,26 @@
                     msgInput.value = '';
                 }
             });
-        
-            // Handle rolling dice
+
             rollButton.addEventListener('click', () => {
                 const sides = parseInt(document.getElementById('diceType').value);
                 const count = parseInt(document.getElementById('diceCount').value);
-        
+
                 if (count > 0 && sides > 0) {
                     socket.emit('roll_dice', { username, room, sides, count });
                 }
             });
         });
 
-        // Handle before unload to disconnect user
-        window.addEventListener('beforeunload', () => {
-            socket.emit('disconnect_user', { username, room });
-        });
+        window.addEventListener('beforeunload', leaveRoom);
 
-        // Listen for the update_users event to update the user list in the room
         socket.on('update_users', (data) => {
             const userList = document.getElementById('users');
-            userList.innerHTML = '';  // Clear the current list
-
-            // Loop through users and add them to the list
+            userList.innerHTML = '';
             data.users.forEach(user => {
                 const li = document.createElement('li');
-                const isHost = user === data.host;  // Check if the user is the host
-                li.innerHTML = isHost ? `<strong>Host: ${user}</strong>` : user;  // Highlight host
+                const isHost = user === data.host;
+                li.innerHTML = isHost ? `<strong>Host: ${user}</strong>` : user;
                 userList.appendChild(li);
             });
         });
